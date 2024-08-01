@@ -1,0 +1,106 @@
+To determine the common manager of two employees in an organizational chart, you can use a tree structure to represent the hierarchy. Each node in the tree represents an employee, and it has a reference to its manager.
+
+Here’s a step-by-step approach to solving this problem:
+
+Define the Data Structure: Represent the organizational chart using a tree where each node has a reference to its manager. For simplicity, each employee will have a unique ID.
+
+Traverse the Tree: To find the common manager, you need to traverse the tree to find the paths from each employee to the root. The first common node in these paths is the common manager.
+
+Implement the Algorithm:
+
+Create a function to find the path from a given employee to the root.
+Use these paths to determine the common manager.
+Python Implementation
+Here’s a Python function that implements this approach:
+
+
+
+class Employee:
+    def __init__(self, id, name, manager=None):
+        self.id = id
+        self.name = name
+        self.manager = manager
+
+def find_path_to_root(employee, path=None):
+    """
+    Finds the path from an employee to the root of the hierarchy.
+    
+    :param employee: The starting employee node.
+    :param path: List to hold the path from the employee to the root.
+    :return: List of employee IDs representing the path to the root.
+    """
+    if path is None:
+        path = []
+    
+    # Add current employee to the path
+    path.append(employee.id)
+    
+    # If there's no manager, we've reached the root
+    if employee.manager is None:
+        return path
+    
+    # Recursively find the path to the root
+    return find_path_to_root(employee.manager, path)
+
+def find_common_manager(emp1, emp2):
+    """
+    Finds the common manager of two employees.
+    
+    :param emp1: The first employee.
+    :param emp2: The second employee.
+    :return: The common manager employee.
+    """
+    # Find paths from employees to the root
+    path1 = find_path_to_root(emp1)
+    path2 = find_path_to_root(emp2)
+    
+    # Convert paths to sets for easy comparison
+    set1 = set(path1)
+    set2 = set(path2)
+    
+    # Find common managers
+    common_managers = set1.intersection(set2)
+    
+    # Return the common manager with the highest hierarchy (closest to root)
+    if common_managers:
+        common_manager_id = min(common_managers, key=lambda x: (path1.index(x) + path2.index(x)))
+        return common_manager_id
+    return None
+
+# Example usage
+# Creating a sample organizational chart
+# Root -> A -> B
+#            -> C
+#       -> D
+
+root = Employee(id=1, name="Root")
+a = Employee(id=2, name="A", manager=root)
+b = Employee(id=3, name="B", manager=a)
+c = Employee(id=4, name="C", manager=a)
+d = Employee(id=5, name="D", manager=root)
+
+# Finding the common manager of B and C
+common_manager_id = find_common_manager(b, c)
+print(f"Common manager ID: {common_manager_id}")  # Output: 2 (ID of A)
+
+
+Explanation
+Data Structure: The Employee class has an ID, a name, and a reference to its manager.
+
+Finding Path to Root: find_path_to_root function recursively traverses from the given employee to the root, collecting IDs in the path.
+
+Finding Common Manager:
+
+Paths from both employees to the root are compared to find common IDs.
+The min function is used to select the common manager closest to the root (highest in the hierarchy).
+Example:
+
+Given employees B and C, their common manager is A because both B and C report to A.
+
+
+
+Complexity
+Time Complexity: O(N) where N is the number of nodes in the hierarchy.
+Space Complexity: O(N) for storing paths.
+
+
