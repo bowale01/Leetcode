@@ -1,0 +1,47 @@
+Problem Summary
+"Best Time to Buy and Sell Stock"
+
+Objective: Maximize profit from buying and selling a stock. You can only make one buy and one sell transaction.
+Input: An array where each element represents the price of a stock on a given day.
+Output: The maximum profit achievable. If no profit can be made, return 0.
+Example
+Input: [7, 1, 5, 3, 6, 4]
+
+Output: 5 (Buy on day 2, sell on day 5)
+Input: [7, 6, 4, 3, 1]
+
+Output: 0 (Prices always decrease)
+Approach
+Initialize:
+
+min_price: Set to infinity to find the lowest price.
+max_profit: Start at 0 to track maximum profit.
+Iterate:
+
+Update min_price with the lowest price encountered.
+Calculate the profit if selling at the current price and update max_profit if this profit is higher.
+Return:
+
+The final value of max_profit after processing all prices.
+
+
+def maxProfit(prices):
+    if not prices:
+        return 0
+    
+    min_price = float('inf')
+    max_profit = 0
+    
+    for price in prices:
+        if price < min_price:
+            min_price = price
+        elif price - min_price > max_profit:
+            max_profit = price - min_price
+    
+    return max_profit
+
+
+
+Complexity
+Time Complexity:  𝑂(𝑛)  (single pass through the list)
+Space Complexity: O(1) (constant space usage
