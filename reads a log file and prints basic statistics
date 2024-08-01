@@ -1,0 +1,62 @@
+For this example, let's assume log entries have a format like this:
+[2024-07-30 12:00:00] INFO Some log message here
+[2024-07-30 12:01:00] ERROR Another log message here
+
+def read_log_file_and_print_statistics(file_path):
+    """
+    Reads a log file and prints basic statistics.
+
+    :param file_path: Path to the log file.
+    """
+    import collections
+    
+    try:
+        # Dictionary to hold log levels and their counts
+        log_levels = collections.defaultdict(int)
+        
+        with open(file_path, 'r') as file:
+            total_lines = 0
+            
+            for line in file:
+                total_lines += 1
+                if line.strip():  # Check if the line is not empty
+                    # Assuming log level is between brackets like [INFO] or [ERROR]
+                    parts = line.split()
+                    if len(parts) > 1:
+                        log_level = parts[1]
+                        log_levels[log_level] += 1
+        
+        # Print statistics
+        print(f"Total number of lines: {total_lines}")
+        print(f"Number of unique log levels: {len(log_levels)}")
+        for level, count in log_levels.items():
+            print(f"Log level '{level}': {count} occurrences")
+    
+    except FileNotFoundError:
+        print(f"Error: The file {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+# Example usage:
+# read_log_file_and_print_statistics('path_to_log_file.log')
+
+
+Explanation
+Import Collections: The collections.defaultdict is used to simplify counting log levels.
+
+Open and Read File: The file is opened in read mode. Each line is processed to count total lines and occurrences of each log level.
+
+Line Processing: Each line is split, and the log level (assumed to be the second element) is counted.
+
+Error Handling: Handles cases where the file does not exist or other potential errors.
+
+Print Statistics: Outputs the total number of lines, unique log levels, and counts for each log level.
+
+Notes
+Log Format: Ensure the log format matches the assumed format. Modify the parsing logic if the format is different.
+Performance: This approach reads the file line-by-line, making it memory efficient for large files.
+Extensibility: You can extend the function to include more sophisticated statistics, such as timestamp ranges, error frequencies, etc., based on your needs.
+Feel free to modify the function according to your specific log file format and requirements!
+
+
+
