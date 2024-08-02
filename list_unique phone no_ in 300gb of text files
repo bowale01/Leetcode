@@ -84,3 +84,14 @@ merge_files(temp_files, output_file)
 # Cleanup temporary files
 for temp_file in temp_files:
     os.remove(temp_file)
+
+
+Explanation
+Regular Expression Pattern: The regular expression pattern (phone_pattern) is designed to match various phone number formats.
+Extracting Phone Numbers: The extract_phone_numbers function reads the input file in chunks, extracts phone numbers, deduplicates and sorts them, and writes them to temporary files.
+Merging Files: The merge_files function merges the sorted temporary files into a single sorted and deduplicated output file using a heap (priority queue) to keep the merge operation efficient.
+Considerations
+Chunk Size: Adjust the chunk size based on your system's memory capacity to avoid memory overflow.
+Temporary Storage: Ensure there's enough disk space for storing the temporary sorted files.
+Performance: This method is efficient for handling large datasets that don't fit into memory by using external sorting techniques.
+This approach allows you to process and sort a large dataset efficiently, ensuring that the final list of phone numbers is both sorted and unique.
