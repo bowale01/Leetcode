@@ -1,0 +1,36 @@
+Python Script
+In Python, you can use the ipaddress module which provides a straightforward way to handle IP addresses. Here’s a Python script to sort IP addresses:
+
+import ipaddress
+
+def sort_ip_addresses(ip_list):
+    # Convert IP addresses to IP objects, sort them, and convert them back to strings
+    sorted_ips = sorted(ipaddress.ip_address(ip) for ip in ip_list)
+    return [str(ip) for ip in sorted_ips]
+
+# Example usage
+if __name__ == "__main__":
+    # Sample IP addresses
+    ip_addresses = [
+        "192.168.1.1",
+        "10.0.0.1",
+        "172.16.0.1",
+        "192.168.1.10",
+        "10.0.0.2",
+    ]
+
+    sorted_ips = sort_ip_addresses(ip_addresses)
+    print("Sorted IP addresses:")
+    for ip in sorted_ips:
+        print(ip)
+
+
+
+
+Explanation
+ipaddress.ip_address: Converts a string IP address into an IPv4Address or IPv6Address object.
+sorted: Sorts the IP address objects.
+str: Converts IP address objects back into strings.
+
+
+Python Script: Save it as sort_ips.py, and run it using python sort_ips.py.
