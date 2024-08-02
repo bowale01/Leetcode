@@ -1,0 +1,77 @@
+ash Script
+You can use a Bash script to perform the calculations. Here’s a simple script to estimate the number of golf balls:
+
+
+#!/bin/bash
+
+# Dimensions of the school bus in inches
+length_in = 480
+width_in = 96
+height_in = 72
+
+# Volume of the bus
+volume_bus=$(echo "$length_in * $width_in * $height_in" | bc)
+
+# Diameter and radius of the golf ball in inches
+diameter_ball=1.68
+radius_ball=$(echo "$diameter_ball / 2" | bc)
+
+# Volume of a golf ball
+volume_ball=$(echo "scale=4; (4 / 3) * 4 * a(1) * ($radius_ball^3)" | bc -l)
+
+# Packing efficiency (74% for spheres)
+packing_efficiency=0.74
+
+# Effective volume available for golf balls
+effective_volume=$(echo "$volume_bus * $packing_efficiency" | bc)
+
+# Number of golf balls
+num_balls=$(echo "scale=0; $effective_volume / $volume_ball" | bc)
+
+echo "Number of golf balls that fit in a school bus: $num_balls"
+
+
+
+Python Script
+You can use Python to perform the same calculations. Here’s a simple Python script for it:
+
+import math
+
+# Dimensions of the school bus in inches
+length_in = 480
+width_in = 96
+height_in = 72
+
+# Volume of the bus
+volume_bus = length_in * width_in * height_in
+
+# Diameter and radius of the golf ball in inches
+diameter_ball = 1.68
+radius_ball = diameter_ball / 2
+
+# Volume of a golf ball (using the formula for the volume of a sphere)
+volume_ball = (4 / 3) * math.pi * (radius_ball ** 3)
+
+# Packing efficiency (74% for spheres)
+packing_efficiency = 0.74
+
+# Effective volume available for golf balls
+effective_volume = volume_bus * packing_efficiency
+
+# Number of golf balls
+num_balls = effective_volume / volume_ball
+
+print(f"Number of golf balls that fit in a school bus: {int(num_balls)}")
+
+
+Bash Script:
+
+Calculates the volume of the bus and golf ball.
+Uses bc for arbitrary-precision calculations.
+Accounts for packing efficiency.
+Computes the number of golf balls that fit into the bus.
+Python Script:
+
+Performs similar calculations using Python’s math module for π.
+Uses floating-point arithmetic to handle precision.
+Prints the number of golf balls that fit into the bus.
