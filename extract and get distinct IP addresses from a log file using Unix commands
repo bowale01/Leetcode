@@ -1,0 +1,82 @@
+1. Using awk, sort, and uniq
+Extracts the IP addresses, sorts them, and then removes duplicates.
+
+cat file.log | awk '{print $1}' | sort | uniq
+
+
+
+2. Using awk with sort and uniq Directly
+Combines extraction and processing of IP addresses in a single pipeline:
+
+awk '{print $1}' file.log | sort | uniq
+
+
+3. Using grep, sort, and uniq
+Extracts IP addresses using a regex pattern, then sorts and removes duplicates.
+
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b' file.log | sort | uniq
+
+
+4. Using grep with awk and sort
+Filters lines with grep, extracts IPs with awk, and then sorts and removes duplicates:
+
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b' file.log | awk '{print $1}' | sort | uniq
+
+
+
+5. Using sed and sort
+Extracts IP addresses with sed, then sorts and finds unique values:
+
+sed -n 's/^\([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/p' file.log | sort | uniq
+
+
+
+6. Using awk with Associative Arrays
+An advanced method to directly extract and store unique IP addresses:
+
+awk '{ip[$1]++} END {for (i in ip) print i}' file.log
+
+
+
+7. Using cut, sort, and uniq
+Extracts the first field, sorts it, and removes duplicates:
+
+
+cut -d' ' -f1 file.log | sort | uniq
+
+
+
+Explanation of Each Approach:
+
+1.  awk, sort, and uniq:
+
+awk '{print $1}': Extracts the first field (assumed to be the IP address).
+sort: Orders the IP addresses.
+uniq: Removes duplicate IP addresses.
+
+
+2. grep, sort, and uniq:
+
+grep -oP '\b\d{1,3}(\.\d{1,3}){3}\b': Extracts IP addresses using a regex pattern.
+sort and uniq: Used to sort and get unique IP addresses.
+
+
+3. sed:
+
+sed -n 's/^\([0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\).*/\1/p': Extracts IP addresses using regex and pattern replacement.
+
+
+4. cut:
+
+cut -d' ' -f1: Splits the file into fields using a delimiter (space) and extracts the first field.
+
+
+5.  awk with Associative Arrays:
+
+awk '{ip[$1]++} END {for (i in ip) print i}': Uses associative arrays to store unique IP addresses and prints them.
+Each method has its use case depending on the structure of your log file and your preferences for processing and extracting data.
+
+
+
+
+
