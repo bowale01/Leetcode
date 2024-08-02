@@ -1,0 +1,175 @@
+
+Sorting two files that do not fit into memory can be efficiently handled using a technique known as External Merge Sort. This method involves breaking down the large files into smaller chunks that fit into memory, sorting these chunks individually, and then merging them together to get the final sorted output.
+
+Steps in External Merge Sort
+1) Divide the Files into Chunks: Split the large files into smaller chunks that can fit into memory.
+2) Sort Each Chunk: Sort each chunk individually using an in-memory sort algorithm.
+3) Write Chunks to Disk: Write each sorted chunk back to disk as temporary files.
+4) Merge Sorted Chunks: Merge the sorted chunks from both files in a manner similar to the merge step of the merge sort algorithm.
+
+
+Practical Example
+Let's consider two large files, file1.txt and file2.txt, that need to be sorted.
+
+Step 1: Divide the Files into Chunks
+Assume each file is 10 GB and we have 1 GB of memory available for sorting. We can read 1 GB at a time, sort it, and write it back to disk as a temporary file.
+
+
+import os
+
+def split_file(file_name, chunk_size):
+    with open(file_name, 'r') as file:
+        lines = []
+        chunk_count = 0
+        for line in file:
+            lines.append(line)
+            if len(lines) * line.__sizeof__() >= chunk_size:
+                with open(f'{file_name}_chunk_{chunk_count}.txt', 'w') as chunk_file:
+                    chunk_file.writelines(lines)
+                lines = []
+                chunk_count += 1
+        if lines:
+            with open(f'{file_name}_chunk_{chunk_count}.txt', 'w') as chunk_file:
+                chunk_file.writelines(lines)
+
+split_file('file1.txt', 1 * 1024 * 1024 * 1024)  # 1 GB chunks
+split_file('file2.txt', 1 * 1024 * 1024 * 1024)  # 1 GB chunks
+
+
+
+
+Step 2: Sort Each Chunk
+Sort each chunk using an in-memory sorting algorithm and write it back to disk.
+
+
+def sort_chunks(file_name, chunk_count):
+    for i in range(chunk_count):
+        with open(f'{file_name}_chunk_{i}.txt', 'r') as chunk_file:
+            lines = chunk_file.readlines()
+        lines.sort()
+        with open(f'{file_name}_chunk_{i}.txt', 'w') as chunk_file:
+            chunk_file.writelines(lines)
+
+chunk_count1 = len([name for name in os.listdir('.') if name.startswith('file1_chunk_')])
+chunk_count2 = len([name for name in os.listdir('.') if name.startswith('file2_chunk_')])
+
+sort_chunks('file1.txt', chunk_count1)
+sort_chunks('file2.txt', chunk_count2)
+
+
+
+Step 3: Merge Sorted Chunks
+Merge the sorted chunks from both files into a single sorted output.
+
+import heapq
+
+def merge_chunks(file1_chunks, file2_chunks, output_file):
+    files = [open(chunk, 'r') for chunk in file1_chunks + file2_chunks]
+    with open(output_file, 'w') as out_file:
+        pq = []
+        for i, file in enumerate(files):
+            line = file.readline()
+            if line:
+                heapq.heappush(pq, (line, i))
+
+        while pq:
+            line, i = heapq.heappop(pq)
+            out_file.write(line)
+            next_line = files[i].readline()
+            if next_line:
+                heapq.heappush(pq, (next_line, i))
+
+    for file in files:
+        file.close()
+
+file1_chunks = [f'file1.txt_chunk_{i}.txt' for i in range(chunk_count1)]
+file2_chunks = [f'file2.txt_chunk_{i}.txt' for i in range(chunk_count2)]
+
+merge_chunks(file1_chunks, file2_chunks, 'sorted_output.txt')
+
+
+
+Explanation
+Split and Sort Chunks:
+
+split_file reads the file in chunks that fit into memory and writes each chunk to a temporary file.
+sort_chunks sorts each of these chunks in memory and writes the sorted chunks back to disk.
+Merge Sorted Chunks:
+
+merge_chunks opens all sorted chunk files and uses a priority queue (min-heap) to efficiently merge them. It reads the first line of each file and inserts it into the heap. Then, it repeatedly extracts the smallest element from the heap, writes it to the output file, and inserts the next line from the same file into the heap.
+This method ensures that you can handle files much larger than your available memory by breaking the problem into manageable pieces and merging them efficiently.
+
+
+combining the file together
+
+import os
+import heapq
+
+# Step 1: Divide the Files into Chunks
+def split_file(file_name, chunk_size):
+    with open(file_name, 'r') as file:
+        lines = []
+        chunk_count = 0
+        for line in file:
+            lines.append(line)
+            if sum(map(len, lines)) >= chunk_size:  # Check if the chunk size limit is reached
+                with open(f'{file_name}_chunk_{chunk_count}.txt', 'w') as chunk_file:
+                    chunk_file.writelines(lines)
+                lines = []
+                chunk_count += 1
+        if lines:  # Write the last chunk if it has remaining lines
+            with open(f'{file_name}_chunk_{chunk_count}.txt', 'w') as chunk_file:
+                chunk_file.writelines(lines)
+
+# Step 2: Sort Each Chunk
+def sort_chunks(file_name, chunk_count):
+    for i in range(chunk_count):
+        with open(f'{file_name}_chunk_{i}.txt', 'r') as chunk_file:
+            lines = chunk_file.readlines()
+        lines.sort()
+        with open(f'{file_name}_chunk_{i}.txt', 'w') as chunk_file:
+            chunk_file.writelines(lines)
+
+# Step 3: Merge Sorted Chunks
+def merge_chunks(file1_chunks, file2_chunks, output_file):
+    files = [open(chunk, 'r') for chunk in file1_chunks + file2_chunks]
+    with open(output_file, 'w') as out_file:
+        pq = []
+        for i, file in enumerate(files):
+            line = file.readline()
+            if line:
+                heapq.heappush(pq, (line, i))
+
+        while pq:
+            line, i = heapq.heappop(pq)
+            out_file.write(line)
+            next_line = files[i].readline()
+            if next_line:
+                heapq.heappush(pq, (next_line, i))
+
+    for file in files:
+        file.close()
+
+# Example Usage
+chunk_size = 1 * 1024 * 1024  # 1 MB chunks (for demonstration)
+
+# Split files into chunks
+split_file('file1.txt', chunk_size)
+split_file('file2.txt', chunk_size)
+
+# Get the number of chunks created
+chunk_count1 = len([name for name in os.listdir('.') if name.startswith('file1.txt_chunk_')])
+chunk_count2 = len([name for name in os.listdir('.') if name.startswith('file2.txt_chunk_')])
+
+# Sort each chunk
+sort_chunks('file1.txt', chunk_count1)
+sort_chunks('file2.txt', chunk_count2)
+
+# List of chunk files
+file1_chunks = [f'file1.txt_chunk_{i}.txt' for i in range(chunk_count1)]
+file2_chunks = [f'file2.txt_chunk_{i}.txt' for i in range(chunk_count2)]
+
+# Merge sorted chunks
+merge_chunks(file1_chunks, file2_chunks, 'sorted_output.txt')
+
+print("Files have been sorted and merged into 'sorted_output.txt'.")
