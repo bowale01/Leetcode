@@ -1,0 +1,194 @@
+To reboot the server only if it hasn't been rebooted in the last 24 hours and the specific line "xxx" is found in the log file, you can modify the Bash script to include a check for the last reboot time. Here's how you can do it:
+
+Step 1: Create the Bash Script
+Save the following script as check_and_reboot_if_needed.sh:
+
+
+
+#!/bin/bash
+
+LOG_FILE="/path/to/your/logfile.log"
+SEARCH_LINE="xxx"
+LAST_REBOOT=$(who -b | awk '{print $3, $4}')
+CURRENT_TIME=$(date +%s)
+LAST_REBOOT_TIME=$(date -d "$LAST_REBOOT" +%s)
+TIME_DIFF=$((CURRENT_TIME - LAST_REBOOT_TIME))
+REBOOT_THRESHOLD=$((24 * 60 * 60))  # 24 hours in seconds
+
+check_log_and_reboot() {
+    if grep -q "$SEARCH_LINE" "$LOG_FILE"; then
+        echo "Found the line: $SEARCH_LINE in the log file."
+        if [ $TIME_DIFF -ge $REBOOT_THRESHOLD ]; then
+            echo "The last reboot was more than 24 hours ago. Rebooting the server..."
+            reboot
+        else
+            echo "The server has been rebooted within the last 24 hours. No need to reboot."
+        fi
+    else
+        echo "The line: $SEARCH_LINE was not found in the log file."
+    fi
+}
+
+check_log_and_reboot
+
+
+Make sure the script is executable:
+
+chmod +x check_and_reboot_if_needed.sh
+
+
+
+Explanation
+Check Last Reboot Time:
+
+who -b provides the last boot time.
+awk '{print $3, $4}' extracts the date and time of the last boot.
+date -d "$LAST_REBOOT" +%s converts the last boot time to seconds since epoch.
+CURRENT_TIME=$(date +%s) gets the current time in seconds since epoch.
+TIME_DIFF=$((CURRENT_TIME - LAST_REBOOT_TIME)) calculates the time difference between now and the last reboot.
+REBOOT_THRESHOLD=$((24 * 60 * 60)) defines the 24-hour threshold in seconds.
+Check Log and Reboot:
+
+The script checks if the specified line ("xxx") exists in the log file using grep.
+If the line is found and the last reboot was more than 24 hours ago (TIME_DIFF -ge $REBOOT_THRESHOLD), it reboots the server.
+If the server was rebooted within the last 24 hours, it prints a message and does not reboot.
+Running the Script on Multiple Servers
+To run this script on multiple servers, you can use Ansible as described previously. Here’s a brief outline of the updated Ansible playbook and tasks.
+
+Updated Ansible Playbook
+Create or update the Ansible playbook reboot_if_needed.yml:
+
+yaml
+Copia codice
+---
+- name: Check log and reboot if necessary
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy check_and_reboot_if_needed.sh to the server
+      copy:
+        src: check_and_reboot_if_needed.sh
+        dest: /tmp/check_and_reboot_if_needed.sh
+        mode: 0755
+
+    - name: Run the check_and_reboot_if_needed.sh script
+      command: /tmp/check_and_reboot_if_needed.sh
+Inventory File
+Ensure your inventory file hosts.ini contains the list of servers:
+
+ini
+Copia codice
+[all]
+server1
+server2
+server3
+...
+Run the Playbook
+Execute the playbook with Ansible:
+
+sh
+Copia codice
+ansible-playbook -i hosts.ini reboot_if_needed.yml
+This approach leverages the power of Bash for local checks and Ansible for remote execution, ensuring that each server reboots only if the specific conditions are met.
+
+-------
+
+
+USING PYTHON 
+
+ automate the process of checking logs and rebooting servers using Python, especially if dealing with multiple servers, we can use the paramiko library to handle SSH connections. This script will connect to each server, check the logs, and determine if a reboot is necessary based on the last reboot time.
+
+Step 1: Install paramiko
+First, ensure you have paramiko installed:
+
+pip install paramiko
+
+
+Step 2: Create the Python Script
+Here's a Python script to check the log file and reboot the server if the specified line is found and the server has not been rebooted in the last 24 hours:
+
+
+
+import paramiko
+import datetime
+
+# Define server details
+servers = [
+    {"hostname": "server1.example.com", "username": "your_username", "password": "your_password"},
+    {"hostname": "server2.example.com", "username": "your_username", "password": "your_password"},
+    # Add more servers as needed
+]
+
+log_file = "/path/to/your/logfile.log"
+search_line = "xxx"
+
+def check_last_reboot_time(ssh_client):
+    stdin, stdout, stderr = ssh_client.exec_command("who -b | awk '{print $3, $4}'")
+    last_reboot_str = stdout.read().decode().strip()
+    if not last_reboot_str:
+        return None
+    last_reboot_time = datetime.datetime.strptime(last_reboot_str, "%Y-%m-%d %H:%M")
+    return last_reboot_time
+
+def check_log_for_line(ssh_client):
+    stdin, stdout, stderr = ssh_client.exec_command(f"grep -q '{search_line}' {log_file}")
+    return stdout.channel.recv_exit_status() == 0
+
+def reboot_server(ssh_client):
+    stdin, stdout, stderr = ssh_client.exec_command("sudo reboot")
+
+def main():
+    for server in servers:
+        print(f"Checking server {server['hostname']}...")
+        ssh_client = paramiko.SSHClient()
+        ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh_client.connect(server['hostname'], username=server['username'], password=server['password'])
+        
+        try:
+            # Check the log file for the specific line
+            if check_log_for_line(ssh_client):
+                print(f"Line '{search_line}' found in log file on {server['hostname']}.")
+                
+                # Check the last reboot time
+                last_reboot_time = check_last_reboot_time(ssh_client)
+                if last_reboot_time is None:
+                    print(f"Could not determine last reboot time for {server['hostname']}. Skipping reboot.")
+                else:
+                    time_diff = datetime.datetime.now() - last_reboot_time
+                    if time_diff.total_seconds() >= 24 * 60 * 60:
+                        print(f"Last reboot was more than 24 hours ago on {server['hostname']}. Rebooting now...")
+                        reboot_server(ssh_client)
+                    else:
+                        print(f"Last reboot was within the last 24 hours on {server['hostname']}. Skipping reboot.")
+            else:
+                print(f"Line '{search_line}' not found in log file on {server['hostname']}. No reboot needed.")
+        finally:
+            ssh_client.close()
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+Explanation
+Server Details:
+
+Replace the servers list with your server details including hostname, username, and password.
+Functions:
+
+check_last_reboot_time: Executes a command to get the last reboot time.
+check_log_for_line: Checks if the specified line exists in the log file.
+reboot_server: Reboots the server using the sudo reboot command.
+Main Loop:
+
+Connects to each server using paramiko.
+Checks if the specific line exists in the log file.
+Determines the last reboot time.
+Reboots the server if the line is found and the last reboot was more than 24 hours ago.
+Running the Script
+Save the script to a file, for example, check_and_reboot.py, and then run it:
+
+
+python check_and_reboot.py
+This script will handle multiple servers, checking the logs and rebooting as necessary based on the specified conditions. Adjust the server details and paths according to your environment.
