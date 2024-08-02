@@ -1,0 +1,194 @@
+What if you had 100+ servers?" asnd you want to reboot the one with xxx error in the log files 
+
+if you need to monitor log files and potentially reboot 100+ servers based on the occurrence of a specific line in a log file, you would want to approach this task with a more scalable and manageable solution. Here are some steps and strategies you could consider:
+
+Centralized Log Management
+Centralize Logs: Use a centralized logging system like Elasticsearch, Logstash, and Kibana (ELK Stack), Splunk, or AWS CloudWatch. This will allow you to aggregate logs from all servers in one place.
+Monitor Logs: Set up alerts and monitoring within your centralized logging system to detect the specific line ("xxx") in any of the log files.
+Automate Actions: Use automation tools to trigger actions (like rebooting a server) based on the alerts.
+Scripted Approach for Each Server
+If centralizing logs is not an option and you need to run a script on each server, you could use a configuration management tool like Ansible, Puppet, or Chef to deploy and execute the script across all servers.
+
+Example with Ansible
+Here’s an example using Ansible to run the script on multiple servers:
+
+1. Create the Python Script
+Save the following script as check_and_reboot.py
+
+
+import os
+import sys
+
+log_file_path = '/path/to/your/logfile.log'
+search_line = 'xxx'
+
+def check_log_and_reboot(log_file_path, search_line):
+    try:
+        with open(log_file_path, 'r') as file:
+            for line in file:
+                if search_line in line:
+                    print(f"Found the line: {search_line}. Rebooting the server...")
+                    reboot_server()
+                    return
+        print(f"The line: {search_line} was not found in the log file.")
+    except FileNotFoundError:
+        print(f"The log file {log_file_path} does not exist.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def reboot_server():
+    try:
+        if os.name == 'nt':  # Windows
+            os.system('shutdown /r /t 0')
+        else:  # Unix/Linux/MacOS
+            os.system('sudo reboot')
+    except Exception as e:
+        print(f"Failed to reboot the server: {e}")
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        log_file_path = sys.argv[1]
+    check_log_and_reboot(log_file_path, search_line)
+
+
+
+2. Create an Ansible Playbook
+Create an Ansible playbook reboot_if_log_found.yml
+
+---
+- name: Check log and reboot if necessary
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy check_and_reboot.py to the server
+      copy:
+        src: check_and_reboot.py
+        dest: /tmp/check_and_reboot.py
+        mode: 0755
+
+    - name: Run the check_and_reboot.py script
+      command: python3 /tmp/check_and_reboot.py /path/to/your/logfile.log
+
+
+
+
+3. Create an Ansible Inventory File
+Create an inventory file hosts.ini:
+
+
+[all]
+server1
+server2
+server3
+...
+
+
+Replace server1, server2, etc., with the actual hostnames or IP addresses of your servers.
+
+4. Run the Ansible Playbook
+Run the playbook with Ansible:
+
+
+ansible-playbook -i hosts.ini reboot_if_log_found.yml
+
+Explanation
+Python Script: This script will run on each server, checking the specified log file for the presence of the line "xxx" and rebooting the server if the line is found.
+Ansible Playbook:
+Copy Task: This task copies the check_and_reboot.py script to each server.
+Command Task: This task runs the script on each server, checking the log file and rebooting if necessary.
+Inventory File: Lists all the servers you want to run the script on.
+Execution: The ansible-playbook command runs the playbook across all specified servers.
+Benefits
+Scalability: Easily deploy and run the script on hundreds of servers.
+Automation: Centralize the execution and management using Ansible.
+Flexibility: The same approach can be adapted for other tasks beyond rebooting servers.
+Using this method, you can efficiently manage and monitor a large number of servers, ensuring that the necessary actions are taken automatically based on the log file contents.
+
+------------------------------------------------------------------------------------------
+
+
+
+USING BASH 
+
+
+USING BASH 
+
+Sure! Here's how you can accomplish this using a Bash script and Ansible for managing multiple servers. The Bash script will check for the specific line in the log file and reboot the server if the line is found. Then, we'll use Ansible to distribute and run this script across multiple servers.
+
+Step 1: Create the Bash Script
+Save the following script as check_and_reboot.sh:
+
+bash
+Copia codice
+#!/bin/bash
+
+LOG_FILE="/path/to/your/logfile.log"
+SEARCH_LINE="xxx"
+
+check_log_and_reboot() {
+    if grep -q "$SEARCH_LINE" "$LOG_FILE"; then
+        echo "Found the line: $SEARCH_LINE. Rebooting the server..."
+        reboot
+    else
+        echo "The line: $SEARCH_LINE was not found in the log file."
+    fi
+}
+
+check_log_and_reboot
+Make sure the script is executable:
+
+sh
+Copia codice
+chmod +x check_and_reboot.sh
+Step 2: Create an Ansible Playbook
+Create an Ansible playbook reboot_if_log_found.yml:
+
+yaml
+Copia codice
+---
+- name: Check log and reboot if necessary
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copy check_and_reboot.sh to the server
+      copy:
+        src: check_and_reboot.sh
+        dest: /tmp/check_and_reboot.sh
+        mode: 0755
+
+    - name: Run the check_and_reboot.sh script
+      command: /tmp/check_and_reboot.sh
+Step 3: Create an Ansible Inventory File
+Create an inventory file hosts.ini:
+
+ini
+Copia codice
+[all]
+server1
+server2
+server3
+...
+Replace server1, server2, etc., with the actual hostnames or IP addresses of your servers.
+
+Step 4: Run the Ansible Playbook
+Run the playbook with Ansible:
+
+sh
+Copia codice
+ansible-playbook -i hosts.ini reboot_if_log_found.yml
+Explanation
+Bash Script:
+
+The script check_and_reboot.sh checks if the specified line ("xxx") exists in the log file.
+If the line is found, it reboots the server using the reboot command.
+Ansible Playbook:
+
+Copy Task: This task copies the check_and_reboot.sh script to each server.
+Command Task: This task runs the script on each server, which checks the log file and reboots if necessary.
+Inventory File:
+
+Lists all the servers you want to run the script on.
+Execution:
+
+The ansible-playbook command runs the playbook across all specified servers, ensuring that each server runs the check_and_reboot.sh script.
+This method allows you to efficiently manage and monitor a large number of servers, ensuring that necessary actions are taken automatically based on the log file contents.
