@@ -1,0 +1,86 @@
+Constructing a list of all unique phone numbers from 300GB of text files in a practical way requires handling the large data size efficiently. Here's a step-by-step approach using Python, leveraging external sorting and efficient data processing techniques.
+
+Steps
+Divide the Files into Chunks: Read the large text files in smaller, manageable chunks that fit into memory.
+Extract Phone Numbers: Use regular expressions to extract phone numbers from each chunk.
+Sort and Deduplicate Chunks: Sort and deduplicate the phone numbers within each chunk.
+Merge Sorted Chunks: Use an external merge sort to combine all sorted and deduplicated chunks into a single list of unique phone numbers.
+
+
+PYTHON SCRIPT 
+
+import re
+import os
+import heapq
+from tempfile import TemporaryDirectory
+
+# Regular expression pattern for phone numbers
+phone_pattern = re.compile(r'\b(?:\+?1\s*[-.●]?)?(\(?\d{3}\)?[-.●]?\s*)?\d{3}[-.●]?\d{4}\b')
+
+def extract_phone_numbers(file_path, chunk_size=1024*1024*100):
+    """
+    Extract phone numbers from a file in chunks and save sorted unique phone numbers to temporary files.
+    """
+    temp_files = []
+    
+    with open(file_path, 'r', encoding='utf-8') as f:
+        chunk = f.read(chunk_size)
+        while chunk:
+            phone_numbers = set(re.findall(phone_pattern, chunk))
+            sorted_numbers = sorted(phone_numbers)
+            
+            with TemporaryDirectory() as temp_dir:
+                temp_file_path = os.path.join(temp_dir, 'temp_phone_numbers.txt')
+                with open(temp_file_path, 'w') as temp_file:
+                    temp_file.write('\n'.join(sorted_numbers) + '\n')
+                temp_files.append(temp_file_path)
+            
+            chunk = f.read(chunk_size)
+    
+    return temp_files
+
+def merge_files(file_list, output_file):
+    """
+    Merge sorted phone number files into a single sorted and deduplicated list.
+    """
+    def file_line_generator(file_path):
+        with open(file_path, 'r') as f:
+            for line in f:
+                yield line.strip()
+    
+    with open(output_file, 'w') as out_file:
+        min_heap = []
+        file_generators = [file_line_generator(file_path) for file_path in file_list]
+        
+        for i, gen in enumerate(file_generators):
+            try:
+                first_line = next(gen)
+                heapq.heappush(min_heap, (first_line, i))
+            except StopIteration:
+                pass
+        
+        previous_number = None
+        while min_heap:
+            smallest_number, i = heapq.heappop(min_heap)
+            if smallest_number != previous_number:
+                out_file.write(smallest_number + '\n')
+                previous_number = smallest_number
+            try:
+                next_line = next(file_generators[i])
+                heapq.heappush(min_heap, (next_line, i))
+            except StopIteration:
+                pass
+
+# Example usage
+input_file = 'large_text_file.txt'  # Path to your large text file
+output_file = 'unique_phone_numbers.txt'  # Path to the output file for unique phone numbers
+
+# Step 1: Extract phone numbers and create sorted temporary files
+temp_files = extract_phone_numbers(input_file)
+
+# Step 2: Merge sorted temporary files into a single sorted and deduplicated list
+merge_files(temp_files, output_file)
+
+# Cleanup temporary files
+for temp_file in temp_files:
+    os.remove(temp_file)
