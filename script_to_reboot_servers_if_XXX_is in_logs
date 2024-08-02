@@ -1,0 +1,156 @@
+To create a script that checks for a specific line "xxx" in a log file and reboots the server if that line is found, you can use a simple shell script. This script will search the log file for the line "xxx" and, if found, will execute a command to reboot the server.
+
+Here is an example of such a script:
+
+
+#!/bin/bash
+
+# Path to the log file
+LOG_FILE="/path/to/your/logfile.log"
+
+# Search for the line "xxx" in the log file
+if grep -q "xxx" "$LOG_FILE"; then
+  echo "Line 'xxx' found in log file. Rebooting server..."
+  # Reboot the server
+  sudo reboot
+else
+  echo "Line 'xxx' not found in log file. No action taken."
+fi
+
+
+
+Steps to Create and Run the Script
+1. Create the Script File:
+
+Open a terminal and create a new script file
+
+nano check_and_reboot.sh
+
+
+Copy and paste the above script into the file.
+
+2. Make the Script Executable:
+
+Save and exit the editor (in nano, you can do this with Ctrl+X, then Y, then Enter).
+Make the script executable:
+
+
+chmod +x check_and_reboot.sh
+
+
+
+3. Run the Script:
+
+Execute the script manually
+
+
+./check_and_reboot.sh
+
+
+Or set up a cron job to run the script periodically. For example, to run the script every 5 minutes, add a cron job:
+
+crontab -e
+
+Add the following line to the crontab:
+
+
+*/5 * * * * /path/to/check_and_reboot.sh
+
+
+xplanation
+LOG_FILE: The path to the log file you want to monitor.
+grep -q "xxx" "$LOG_FILE": The grep command searches for the string "xxx" in the log file. The -q option makes grep operate in "quiet" mode, so it doesn't output anything; it just sets the exit status to 0 if the string is found or 1 if it's not.
+if statement: Checks the exit status of grep. If it is 0 (meaning "xxx" was found), the script echoes a message and reboots the server using sudo reboot.
+sudo reboot: The command to reboot the server. Make sure the user running the script has the necessary permissions to execute this command without a password prompt.
+Permissions
+Ensure that the user running this script has the necessary permissions to read the log file and execute the reboot command. You might need to configure sudoers to allow the user to run reboot without a password:
+
+
+
+sudo visudo
+
+Add the following line (adjust the username accordingly):
+
+username ALL=(ALL) NOPASSWD: /sbin/reboot
+
+
+
+Using python script 
+
+
+import os
+import sys
+
+# Path to the log file
+log_file_path = '/path/to/your/logfile.log'
+
+# The specific line to search for
+search_line = 'xxx'
+
+def check_log_and_reboot(log_file_path, search_line):
+    try:
+        with open(log_file_path, 'r') as file:
+            for line in file:
+                if search_line in line:
+                    print(f"Found the line: {search_line}. Rebooting the server...")
+                    reboot_server()
+                    return
+        print(f"The line: {search_line} was not found in the log file.")
+    except FileNotFoundError:
+        print(f"The log file {log_file_path} does not exist.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def reboot_server():
+    try:
+        if os.name == 'nt':  # Windows
+            os.system('shutdown /r /t 0')
+        else:  # Unix/Linux/MacOS
+            os.system('sudo reboot')
+    except Exception as e:
+        print(f"Failed to reboot the server: {e}")
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        log_file_path = sys.argv[1]
+    check_log_and_reboot(log_file_path, search_line)
+
+
+
+
+How to Use the Script
+1. Save the script to a file, for example, check_and_reboot.py.
+2. Modify the log_file_path to point to your actual log file path.
+3. Run the script with appropriate permissions. On Unix-like systems, you might need to use sudo to allow the script to execute the reboot command.
+Running the Script
+On Unix/Linux/MacOS:
+
+
+sudo python3 check_and_reboot.py /path/to/your/logfile.log
+
+On Windows:
+Run the script from a command prompt with administrative privileges:
+python check_and_reboot.py C:\path\to\your\logfile.log
+
+
+
+Explanation
+
+
+check_log_and_reboot(log_file_path, search_line):
+   Opens the log file and reads it line by line.
+    If the specific line ("xxx") is found, it calls the reboot_server() function.
+	
+reboot_server():
+
+   Uses os.system to execute the appropriate command to reboot the server.
+    The command varies based on the operating system (shutdown /r /t 0 for Windows and sudo reboot for Unix/Linux/MacOS).
+	
+	
+Notes
+
+Ensure the script has the necessary permissions to read the log file and execute the reboot command.
+
+For Unix/Linux/MacOS, running os.system('sudo reboot') requires the script to be run with sudo.
+
+For safety and security reasons, avoid running scripts that can reboot servers without strict control and monitoring.
