@@ -56,6 +56,21 @@ sort -k 4,4 -n example.log
 2024-08-08 12:35:15 ERROR 192.168.1.4 500 "Failed login attempt"
 
 
+
+Sort IP Addresses:
+
+Sort the extracted IP addresses:
+
+
+grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' log.txt | sort
+
+192.168.1.1
+192.168.1.1
+192.168.1.2
+192.168.1.3
+
+
+
 Using UNIQ
 1. Remove duplicate lines:
 
@@ -67,6 +82,7 @@ sort example.log | uniq
 2024-08-08 12:35:10 WARNING 192.168.1.3 404 "Resource not found"
 2024-08-08 12:35:15 ERROR 192.168.1.4 500 "Failed login attempt"
 2024-08-08 12:35:20 INFO 192.168.1.1 200 "User logged in again"
+
 
 2. Count occurrences of each unique line:
 
