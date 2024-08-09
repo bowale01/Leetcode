@@ -80,3 +80,45 @@ Each method has its use case depending on the structure of your log file and you
 
 
 
+
+
+Script to Find All Distinct IP Addresses from a Log File
+
+import re
+
+def extract_ips(filename):
+    with open(filename, 'r') as file:
+        log_data = file.readlines()
+
+    ip_pattern = re.compile(r'(\d{1,3}\.){3}\d{1,3}')
+    ips = set()
+
+    for line in log_data:
+        match = ip_pattern.search(line)
+        if match:
+            ips.add(match.group())
+
+    return ips
+
+def save_ips(ips, output_file):
+    with open(output_file, 'w') as file:
+        for ip in sorted(ips):
+            file.write(ip + '\n')
+
+if __name__ == '__main__':
+    log_file = 'log.txt'
+    output_file = 'unique_ips.txt'
+
+    ips = extract_ips(log_file)
+    save_ips(ips, output_file)
+Explanation of Python Script
+Extract IPs: Reads the log file and uses a regular expression to find IP addresses.
+Store IPs in a Set: Using a set to automatically handle duplicates.
+Save Unique IPs: Writes the unique IPs to an output file, sorted for easy reading.
+Both the Unix command and Python script effectively find and list all distinct IP addresses from a log file, showcasing different methods to achieve the same result.
+
+
+
+
+
+
