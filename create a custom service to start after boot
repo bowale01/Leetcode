@@ -1,0 +1,105 @@
+On modern Linux systems, this is usually done with systemd, which is the most commonly used init system.
+
+Here’s a step-by-step guide to creating and configuring a custom service with systemd:
+
+1. Create a Service Script
+
+First, ensure you have a script or executable that you want to run as a service. For example, you might have a script located at /usr/local/bin/my-service.sh
+
+2. Write a Systemd Service Unit File
+You need to create a service unit file that systemd will use to manage your service. This file should be placed in /etc/systemd/system/ and should have a .service extension.
+
+      1. Create the Service Unit File   
+           sudo nano /etc/systemd/system/my-custom-service.service
+
+      2. Add the Following Content
+           
+[Unit]
+Description=My Custom Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/my-service.sh
+Restart=always
+User=myuser
+Group=mygroup
+
+[Install]
+WantedBy=multi-user.target
+
+
+[Unit] Section:
+
+Description: Brief description of the service.
+After: Specifies that the service should start after the network is up.
+[Service] Section:
+
+ExecStart: Path to the script or executable to run.
+Restart: Specifies when the service should be restarted (e.g., always means it will restart if it fails).
+User and Group: The user and group under which the service will run. Replace myuser and mygroup with the appropriate values.
+[Install] Section:
+
+WantedBy: Specifies the target (run level) under which the service should be started. multi-user.target is a common target for system services.
+
+
+    3. Reload Systemd Configuration
+
+         sudo systemctl daemon-reload
+
+    4. Start the Service
+
+         sudo systemctl start my-custom-service
+
+   5. Enable the Service
+         To ensure the service starts automatically at boot, enable it:
+
+        sudo systemctl enable my-custom-service
+
+   6. Check the Status
+
+       sudo systemctl status my-custom-service
+
+
+
+7. Troubleshoot (if necessary)
+If the service isn’t working as expected, check the logs for errors:
+
+
+journalctl -u my-custom-service
+Example of Full Steps
+Here’s an example of a complete setup:
+
+Create the script /usr/local/bin/my-service.sh:
+
+#!/bin/bash
+echo "My Custom Service is running" > /var/log/my-custom-service.log
+while true; do
+    sleep 60
+done
+Make sure to make the script executable:
+
+b
+sudo chmod +x /usr/local/bin/my-service.sh
+Create the systemd unit file /etc/systemd/system/my-custom-service.service:
+
+
+[Unit]
+Description=My Custom Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/my-service.sh
+Restart=always
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+Reload systemd, start, enable, and check the status:
+
+sudo systemctl daemon-reload
+sudo systemctl start my-custom-service
+sudo systemctl enable my-custom-service
+sudo systemctl status my-custom-service
+By following these steps, you can create and manage a custom service that starts automatically after boot on a Linux system using systemd.
+  
